@@ -4,9 +4,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+using namespace std;
 #define N 10 //Number of particles in the simulation
 #define G 6.673e-11 //Universal gravity constnt-Thanks Newton :D
-#define TIMESLICE
+#define TIMESLICE 1653265
 struct Particle{
     double mass;//particle mass
     double rx, ry;//particle position
@@ -35,7 +36,7 @@ Particle AddForce(Particle a,Particle b)//Calculate and add the force particle b
 	double xdist = b.rx - a.rx;
 	double ydist = b.ry - a.ry;
 	double distance = sqrt(xdist * xdist + ydist * ydist); //Distance formula learned in High School. 
-	double gravForce = G*(a.mass*b.mass/(distance^2));
+	double gravForce = G*(a.mass*b.mass/(distance));
 	a.fx += gravForce * (xdist/distance); 	//the ratio between gravForce and the distance between a and b 
 											//is the same as ratio between the x component of gravForce and the xdist between a and b
 	a.fy += gravForce * (ydist/distance); 	//and the ratio between the y component of gravForce and the ydist between a and b
@@ -48,7 +49,7 @@ Particle AddForce(Particle a,Particle b)//Calculate and add the force particle b
 void PrintToFile(Particle p)
 {
 	ofstream myfile;
-	myfile.open ("nbodyout.txt");
+	myfile.open ("nbodyout.txt",ios::out | ios::app);
 	myfile << "Writing this to a file.\n";
 	myfile.close();
 }
@@ -74,6 +75,7 @@ int main()
     }
 
 	PrintToFile(particles[1]);
+	PrintToFile(particles[2]);
     int numberofiterations = 10;
     int count = 0;
     while (count < numberofiterations){ //Runs for number of iterations chosen 
