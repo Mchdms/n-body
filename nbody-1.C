@@ -119,13 +119,23 @@ int main()
 		int smallY = particles[i].ry * pow(10,-29);
 		//put in method or else it's useless
 
-		if (smallY > -500 && smallY < 500 && smallX > -500 && smallX < 500)
+		if (smallY > -490 && smallY < 490 && smallX > -490 && smallX < 490) {
+			bigString[smallY+499][smallX+499] = 0;
+			bigString[smallY+499][smallX+500] = 0;
+			bigString[smallY+499][smallX+501] = 0;
+			bigString[smallY+500][smallX+499] = 0;
 			bigString[smallY+500][smallX+500] = 0;
+			bigString[smallY+500][smallX+501] = 0;
+			bigString[smallY+501][smallX+499] = 0;
+			bigString[smallY+501][smallX+500] = 0;
+			bigString[smallY+501][smallX+501] = 0;
+		}
 
         }
-	
+	char buffer[32];
+	snprintf(buffer, sizeof(buffer), "nbodyout%d.pbm", count);
 	//print 2d array to text file
-	ofstream out("nbodyout.pbm");
+	ofstream out(buffer);
 	out << "P1 1000 1000\n";
 	for(int y = 0; y < 1000; y++) {
 		for(int x = 0; x < 1000; x++) {
