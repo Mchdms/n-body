@@ -13,4 +13,4 @@ Open a terminal in the directory of the run file, and type ./run
 The program can be run multiple times, and all image files will be overwritten. 
 You will be asked if you would like to overwrite the video file if you have already run the program once. 
 
-Currently this code uses the Brute Force approach to solving the N-Body problem. 
+This code uses the Brute Force approach to solving the N-Body problem. 
