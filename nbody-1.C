@@ -5,22 +5,27 @@
 #include <cstdlib>
 #include <fstream>
 #include <pthread.h>
+
 using namespace std;
+
 #define N 30 //Number of particles in the simulation
 #define G 6.673e-11 //Universal gravity constnt-Thanks Newton :D
 #define TIMESLICE 1
 #define xCoord 500
 #define yCoord 500
 #define numThreads 8
+
 pthread_mutex_t mutex;
+
 struct Particle{
     double mass;//particle mass
     double rx, ry;//particle position
     double vx, vy;//particle velocity
     double fx, fy;//particle force
 
-};
-Particle Update(Particle p, double timeslice)
+}
+
+Particle UpdateParticle(Particle p, double timeslice)
 {
     p.vx += timeslice*p.fx / p.mass;
     p.vy += timeslice*p.fy / p.mass;
@@ -29,34 +34,34 @@ Particle Update(Particle p, double timeslice)
     return p;
 }
 
-void PrintParticle(Particle p)
+void PrintParticle(Particle p) //Prints coordinate, velocity, and mass data to the stdout screen for debugging. 
 {
     printf("rx == %f ry == %f vx == %f vy == %f mass == %f\n", p.rx,p.ry,p.vx,p.vy,p.mass);
 }
-//Reset the forces on particle
-Particle ResetForce(Particle p)
+
+//Reset the forces on particle to 0s
+Particle ZeroForce(Particle p)
 {
     p.fx = 0.0;
     p.fy = 0.0;
     return p;
 }
-Particle AddForce(Particle a,Particle b)//Calculate and add the force particle b has on particle a
-{//http://home.fnal.gov/~cheung/rtes/RTESWeb/LQCD_site/pages/calculatingtheforces.htm
+
+//Calculate and add the force particle b has on particle a
+Particle AddForce(Particle a,Particle b)
+{// idea borrowed from ** http://home.fnal.gov/~cheung/rtes/RTESWeb/LQCD_site/pages/calculatingtheforces.htm ** for first few formulas
 	double nzero = 1000;
 	double xdist = b.rx - a.rx;
 	double ydist = b.ry - a.ry;
 	double distance = sqrt(xdist * xdist + ydist * ydist); //Distance formula learned in High School. 
-	double gravForce = G*(a.mass*b.mass/(distance*1e7*distance)); // Makes distance more realistic for visulization
+	double gravForce = G*(a.mass*b.mass/(distance*1e7*distance)); // Makes distance more realistic for visulization0
 	a.fx += gravForce * (xdist/distance); 	//the ratio between gravForce and the distance between a and b 
 											//is the same as ratio between the x component of gravForce and the xdist between a and b
 	a.fy += gravForce * (ydist/distance); 	//and the ratio between the y component of gravForce and the ydist between a and b
-	
-			//sin^-1((abs(a.xdist - b.xdist) / distance)) = angle
-			//sin(angle) = WantedXDistance / gravForce
-			//cos(angle) = WantedYDistance / gravForce
 	return a;
 }
 
+//Prints particle information to file --> format in .pbm
 void PrintToFile(Particle p)
 {
 	ofstream myfile;
@@ -66,18 +71,19 @@ void PrintToFile(Particle p)
 	myfile.close();
 }
 
+//Creates N random particles, and returns a Particle object
 Particle createParticles(Particle particles[N])
 {
-    //randomly generating N Particles
+    //randomly generates N Particles
 	srand(time(NULL)); // Seed the time
 	
+	//setting position, velocity, and mass
 	for (int i = 0; i < N; i++){
-       
-        particles[i].rx = rand()%1000-500;
+        particles[i].rx = rand()%1000-500; //picking position between -500 and 500 to fit on display coordinates
 		particles[i].ry = rand()%1000-500;
-        particles[i].vx = rand()%20 - 10;
+        particles[i].vx = rand()%20 - 10;  //picking velocity between -10 units/timeslice and 10 units/timeslice (since display is only 1000 units wide)
         particles[i].vy = rand()%20 - 10;
-        particles[i].mass = 1e20;
+        particles[i].mass = 1e20;  //can change this to be variable, probably ranging from 1e20 to 1e30
 		
     }
 	return particles[N];
@@ -85,6 +91,13 @@ Particle createParticles(Particle particles[N])
 
 int main()
 {
+	//creating threads for multi-threading optimization
+	pthread_t threads[threadNum];
+	int rc;
+	
+	
+	
+	//creating the random group of particles
 	Particle particles[N];
 	createParticles(particles);
 
@@ -94,22 +107,22 @@ int main()
     while (count < numberofiterations){ //Runs for number of iterations chosen 
         for (int i = 0; i < N; i++)
         {
-            particles[i] = ResetForce(particles[i]);//Resets the forces to 0 on the given particle
+            particles[i] = ZeroForce(particles[i]); //Resets the forces to 0 on the given particle
             for (int j = 0; j < N; j++)
             {
-                if (i != j) //Adds the forces given to a prticle from other particles, but not itself
+                if (i != j) //Adds the forces given to a particle from other particles, but not itself
                 {
                     particles[i] = AddForce(particles[i], particles[j]);
                 }
-
             }
         }
         //loop again to update the time slice here
         for (int i = 0; i < N; i++)
         {
-            particles[i] = Update(particles[i], TIMESLICE);
+            particles[i] = UpdateParticle(particles[i], TIMESLICE);
         }
 	//Print each particle in an image with a for loop
+	//Initialize display to all black --> particles will be white pixels
 	int bigString[1000][1000];
 	for (int y = 0; y < 1000; y++) {
 		for (int x = 0; x < 1000; x++) {
@@ -121,23 +134,25 @@ int main()
 	for (int i = 0; i < N; i++)
         {
             PrintParticle(particles[i]);
-		int smallX = particles[i].rx;
-		int smallY = particles[i].ry;
-		//put in method or else it's useless
+			int smallX = particles[i].rx;
+			int smallY = particles[i].ry;
 
-		if (smallY > -490 && smallY < 490 && smallX > -490 && smallX < 490) {
-			bigString[smallY+499][smallX+499] = 0;
-			bigString[smallY+499][smallX+500] = 0;
-			bigString[smallY+499][smallX+501] = 0;
-			bigString[smallY+500][smallX+499] = 0;
-			bigString[smallY+500][smallX+500] = 0;
-			bigString[smallY+500][smallX+501] = 0;
-			bigString[smallY+501][smallX+499] = 0;
-			bigString[smallY+501][smallX+500] = 0;
-			bigString[smallY+501][smallX+501] = 0;
-		}
-
+			// particles are normally 1 pixel --> change to 3x3 square for better visibility
+			if (smallY > -490 && smallY < 490 && smallX > -490 && smallX < 490) {
+				bigString[smallY+499][smallX+499] = 0;
+				bigString[smallY+499][smallX+500] = 0;
+				bigString[smallY+499][smallX+501] = 0;
+				bigString[smallY+500][smallX+499] = 0;
+				bigString[smallY+500][smallX+500] = 0;
+				bigString[smallY+500][smallX+501] = 0;
+				bigString[smallY+501][smallX+499] = 0;
+				bigString[smallY+501][smallX+500] = 0;
+				bigString[smallY+501][smallX+501] = 0;
+			}
         }
+		
+	//dynamically changing .pbm file names for every timeslice
+	//FFMPEG creates a video from sequentially named files --> * command is stored in run.sh file *
 	char buffer[32];
 	snprintf(buffer, sizeof(buffer), "nbodyout%d.pbm", count);
 	//print 2d array to text file
@@ -150,12 +165,6 @@ int main()
 		out << "\n";
 	}
 	out.close();
-
-        count++;
+	count++;
     }
-
-	
-
-
-
 }
