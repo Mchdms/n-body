@@ -1,0 +1,6 @@
+#!/bin/bash
+echo 'Compiling nbody-1.C'
+g++ nbody-1.C -o nbody
+echo 'Compilation successful'
+./nbody
+ffmpeg -f image2 -i nbodyout%d.pbm nbody.avi
