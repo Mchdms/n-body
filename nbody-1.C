@@ -7,7 +7,7 @@
 using namespace std;
 #define N 30 //Number of particles in the simulation
 #define G 6.673e-11 //Universal gravity constnt-Thanks Newton :D
-#define TIMESLICE 1653265
+#define TIMESLICE 1
 #define xCoord 500
 #define yCoord 500
 struct Particle{
@@ -28,7 +28,7 @@ Particle Update(Particle p, double timeslice)
 
 void PrintParticle(Particle p)
 {
-    printf("rx == %f ry == %f vx == %f vy == %f mass == %f\n", p.rx*pow(10,-31),p.ry*pow(10,-31),p.vx*pow(10,-30),p.vy*pow(10,-30),p.mass);
+    printf("rx == %f ry == %f vx == %f vy == %f mass == %f\n", p.rx,p.ry,p.vx,p.vy,p.mass);
 }
 //Reset the forces on particle
 Particle ResetForce(Particle p)
@@ -69,21 +69,17 @@ int main()
 	srand(time(NULL)); // Seed the time
 	
 	for (int i = 0; i < N; i++){
-        double rx = 1e18*exp(-1.8)*(rand() % 50000000 - 25000000);
-        particles[i].rx = rx;
-        double ry = 1e18*exp(-1.8)*(rand() % 50000000 - 25000000);
-        particles[i].ry = ry;
-        double vx = 1e18*exp(-1.8)*(rand() % 50000000 - 25000000);
-        particles[i].vx = vx;
-        double vy = 1e18*exp(-1.8)*(rand() % 50000000 - 25000000);
-        particles[i].vy = vy;
-        double mass = 1.98892e30*rand()*10 + 1e20;
-        particles[i].mass = mass;
+       
+        particles[i].rx = rand()%1000-500;
+		particles[i].ry = rand()%1000-500;
+        particles[i].vx = rand()%20 - 10;
+        particles[i].vy = rand()%20 - 10;
+        particles[i].mass = 1e20;
 		
     }
 
 	
-    int numberofiterations = 10;
+    int numberofiterations = 100;
     int count = 0;
     while (count < numberofiterations){ //Runs for number of iterations chosen 
         for (int i = 0; i < N; i++)
@@ -115,8 +111,8 @@ int main()
 	for (int i = 0; i < N; i++)
         {
             PrintParticle(particles[i]);
-		int smallX = particles[i].rx * pow(10,-29);
-		int smallY = particles[i].ry * pow(10,-29);
+		int smallX = particles[i].rx;
+		int smallY = particles[i].ry;
 		//put in method or else it's useless
 
 		if (smallY > -490 && smallY < 490 && smallX > -490 && smallX < 490) {
