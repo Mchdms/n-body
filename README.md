@@ -4,6 +4,7 @@ N-Body siumulation in C++
 # REQUIREMENTS
 This program was built on Linux for Linux, though it may be possible to run it on OSX or bash on Windows. 
 GCC's c++ compiler must be installed
+
 FFMPEG must be installed.
 
 # How to run the program
