@@ -9,13 +9,13 @@
 using namespace std;
 
 #define N 30 //Number of particles in the simulation
-#define G 6.673e-11 //Universal gravity constnt-Thanks Newton :D
+#define G 6.673e-11 //Universal gravity constant-Thanks Newton :D
 #define TIMESLICE 1
 #define xCoord 500
 #define yCoord 500
-#define numThreads 8
 
-pthread_mutex_t mutex;
+//****Put back in if using multi-threading
+	//int threadNum = N;
 
 struct Particle{
     double mass;//particle mass
@@ -23,7 +23,7 @@ struct Particle{
     double vx, vy;//particle velocity
     double fx, fy;//particle force
 
-}
+};
 
 Particle UpdateParticle(Particle p, double timeslice)
 {
@@ -54,10 +54,15 @@ Particle AddForce(Particle a,Particle b)
 	double xdist = b.rx - a.rx;
 	double ydist = b.ry - a.ry;
 	double distance = sqrt(xdist * xdist + ydist * ydist); //Distance formula learned in High School. 
-	double gravForce = G*(a.mass*b.mass/(distance*1e7*distance)); // Makes distance more realistic for visulization0
+	double gravForce = G*(a.mass*b.mass/(distance*1e7*distance)); // 1e7 --> Makes distance more realistic for visualization
 	a.fx += gravForce * (xdist/distance); 	//the ratio between gravForce and the distance between a and b 
 											//is the same as ratio between the x component of gravForce and the xdist between a and b
 	a.fy += gravForce * (ydist/distance); 	//and the ratio between the y component of gravForce and the ydist between a and b
+	
+	//Originally kept track of threadID inside method
+		//long tid;
+		//tid = (long)threadid;
+		//pthread_exit(NULL);
 	return a;
 }
 
@@ -92,16 +97,14 @@ Particle createParticles(Particle particles[N])
 int main()
 {
 	//creating threads for multi-threading optimization
-	pthread_t threads[threadNum];
-	int rc;
-	
-	
+	//****Put back in if using threading****
+		//pthread_t threads[threadNum];
+		//Particle rc;	
 	
 	//creating the random group of particles
 	Particle particles[N];
 	createParticles(particles);
 
-	
     int numberofiterations = 100;
     int count = 0;
     while (count < numberofiterations){ //Runs for number of iterations chosen 
@@ -110,17 +113,24 @@ int main()
             particles[i] = ZeroForce(particles[i]); //Resets the forces to 0 on the given particle
             for (int j = 0; j < N; j++)
             {
-                if (i != j) //Adds the forces given to a particle from other particles, but not itself
-                {
-                    particles[i] = AddForce(particles[i], particles[j]);
-                }
+                if (i != j)  //Adds the forces given to a particle from other particles, but not itself
+                	
+					//Creates threads for each particle --> calculates forces from every other particle
+					//****Does not run correctly when attempted**** --> thinking that AddParticle() needs to be of type Void * in order for pthread_create to work properly
+						//rc = pthread_create(&threads[i], NULL, AddForce, particles[i], particles[j]); 
+                    	//particles[i] = rc;
+					particles[i] = AddForce(particles[i], particles[j]);
+				
             }
         }
-        //loop again to update the time slice here
-        for (int i = 0; i < N; i++)
-        {
-            particles[i] = UpdateParticle(particles[i], TIMESLICE);
-        }
+	//****Put back in if using threading****
+		//pthread_exit(NULL);
+	
+    //loop again to update the time slice here
+    for (int i = 0; i < N; i++)
+    {
+        particles[i] = UpdateParticle(particles[i], TIMESLICE);
+    }
 	//Print each particle in an image with a for loop
 	//Initialize display to all black --> particles will be white pixels
 	int bigString[1000][1000];
@@ -166,5 +176,6 @@ int main()
 	}
 	out.close();
 	count++;
-    }
-}
+    } //End While (higher up)
+} //End Main
+
