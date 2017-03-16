@@ -4,12 +4,15 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <pthread.h>
 using namespace std;
 #define N 30 //Number of particles in the simulation
 #define G 6.673e-11 //Universal gravity constnt-Thanks Newton :D
 #define TIMESLICE 1
 #define xCoord 500
 #define yCoord 500
+#define numThreads 8
+pthread_mutex_t mutex;
 struct Particle{
     double mass;//particle mass
     double rx, ry;//particle position
@@ -43,7 +46,7 @@ Particle AddForce(Particle a,Particle b)//Calculate and add the force particle b
 	double xdist = b.rx - a.rx;
 	double ydist = b.ry - a.ry;
 	double distance = sqrt(xdist * xdist + ydist * ydist); //Distance formula learned in High School. 
-	double gravForce = G*(a.mass*b.mass/(distance));
+	double gravForce = G*(a.mass*b.mass/(distance*1e7*distance)); // Makes distance more realistic for visulization
 	a.fx += gravForce * (xdist/distance); 	//the ratio between gravForce and the distance between a and b 
 											//is the same as ratio between the x component of gravForce and the xdist between a and b
 	a.fy += gravForce * (ydist/distance); 	//and the ratio between the y component of gravForce and the ydist between a and b
@@ -51,6 +54,7 @@ Particle AddForce(Particle a,Particle b)//Calculate and add the force particle b
 			//sin^-1((abs(a.xdist - b.xdist) / distance)) = angle
 			//sin(angle) = WantedXDistance / gravForce
 			//cos(angle) = WantedYDistance / gravForce
+	return a;
 }
 
 void PrintToFile(Particle p)
@@ -62,9 +66,8 @@ void PrintToFile(Particle p)
 	myfile.close();
 }
 
-int main()
+Particle createParticles(Particle particles[N])
 {
-    Particle particles[N];
     //randomly generating N Particles
 	srand(time(NULL)); // Seed the time
 	
@@ -77,6 +80,13 @@ int main()
         particles[i].mass = 1e20;
 		
     }
+	return particles[N];
+}	
+
+int main()
+{
+	Particle particles[N];
+	createParticles(particles);
 
 	
     int numberofiterations = 100;
